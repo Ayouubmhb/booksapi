@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(uuid())
+  nom             String
+  prenom          String
+  email           String           @unique
+  password        String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  emprunts        Emprunt[]
+  passwordResets  PasswordReset[]
+}
+
+model Book {
+  id         String        @id @default(uuid())
+  titre      String
+  annee      Int
+  autheur    String
+  descr      String       @db.Text
+  disponible Boolean       @default(true)
+  cover      String?
+  genres     BookGenre[]
+  emprunts   Emprunt[]
+}
+
+model Genre {
+  id     String       @id @default(uuid())
+  nom    String       @unique
+  books  BookGenre[]
+}
+
+model BookGenre {
+  id       String   @id @default(uuid())
+  id_book  String
+  id_genre String
+
+  book     Book   @relation(fields: [id_book], references: [id])
+  genre    Genre  @relation(fields: [id_genre], references: [id])
+
+  @@unique([id_book, id_genre])
+}
+
+model Emprunt {
+  id       String   @id @default(uuid())
+  date     DateTime @default(now())
+  id_book  String
+  id_user  String
+
+  book     Book     @relation(fields: [id_book], references: [id])
+  user     User     @relation(fields: [id_user], references: [id])
+}
+
+model PasswordReset {
+  id         String   @id @default(uuid())
+  code       String
+  user_id    String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+}
